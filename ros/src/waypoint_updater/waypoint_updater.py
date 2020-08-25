@@ -63,7 +63,7 @@ class WaypointUpdater(object):
 
         cl_vect = np.array(closest_coord)
         prev_vect = np.array(prev_coord)
-        pos_vect = np.array([x, y)]
+        pos_vect = np.array([x, y])
 
         val = np.dot(cl_vect-prev_vect, pos_vect-cl_vect)
 
