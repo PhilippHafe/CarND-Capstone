@@ -5,7 +5,7 @@ import datetime
 
 class TLClassifier(object):
     def __init__(self):
-        PATH_TO_CKPT = "light_classification/models/frozen_interference_graph.pb"
+        PATH_TO_CKPT = "frozen_interference_graph.pb"
         self.graph = tf.Graph()
         self.threshold = 0.5
 
