@@ -52,7 +52,31 @@ class TLDetector(object):
         self.last_wp = -1
         self.state_count = 0
 
-        rospy.spin()
+        self.custom_spin()
+
+    def custom_spin(self):
+	rate = rospy.Rate(10)
+	while not rospy.is_shutdown():
+	    if self.pose is not None and self.waypoints is not None and self.camera_image is not None:
+		light_wp, state = self.process_traffic_lights()
+
+		'''
+		Publish upcoming red lights at camera frequency.
+		Each predicted state has to occur `STATE_COUNT_THRESHOLD` number
+		of times till we start using it. Otherwise the previous stable state is
+		used.
+		'''
+		if self.state != state:
+		    self.state_count = 0
+		    self.state = state
+		elif self.state_count >= STATE_COUNT_THRESHOLD:
+		    self.last_state = self.state
+		    light_wp = light_wp if state == TrafficLight.RED else -1
+		    self.last_wp = light_wp
+		    self.upcoming_red_light_pub.publish(Int32(light_wp))
+		else:
+		    self.upcoming_red_light_pub.publish(Int32(self.last_wp))
+		self.state_count += 1
 
     def pose_cb(self, msg):
         self.pose = msg
@@ -77,25 +101,7 @@ class TLDetector(object):
         """
         self.has_image = True
         self.camera_image = msg
-        light_wp, state = self.process_traffic_lights()
-
-        '''
-        Publish upcoming red lights at camera frequency.
-        Each predicted state has to occur `STATE_COUNT_THRESHOLD` number
-        of times till we start using it. Otherwise the previous stable state is
-        used.
-        '''
-        if self.state != state:
-            self.state_count = 0
-            self.state = state
-        elif self.state_count >= STATE_COUNT_THRESHOLD:
-            self.last_state = self.state
-            light_wp = light_wp if state == TrafficLight.RED else -1
-            self.last_wp = light_wp
-            self.upcoming_red_light_pub.publish(Int32(light_wp))
-        else:
-            self.upcoming_red_light_pub.publish(Int32(self.last_wp))
-        self.state_count += 1
+        
 
     def get_closest_waypoint(self, x, y):
         """Identifies the closest path waypoint to the given position
@@ -123,6 +129,7 @@ class TLDetector(object):
         """
         #return light.state
         print("Ground truth: {}".format(light.state))
+
         if(not self.has_image):
             self.prev_light_loc = None
             return False
