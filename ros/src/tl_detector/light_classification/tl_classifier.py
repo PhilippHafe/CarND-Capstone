@@ -5,7 +5,7 @@ import datetime
 
 class TLClassifier(object):
     def __init__(self):
-        PATH_TO_CKPT = "light_classification/frozen_inference_graph.pb"
+        PATH_TO_CKPT = "light_classification/frozen_inference_graph_josehoras.pb"
         self.graph = tf.Graph()
         self.threshold = 0.5
 
@@ -50,16 +50,19 @@ class TLClassifier(object):
         classes = np.squeeze(classes).astype(np.int32)
         scores = np.squeeze(scores)
         
+	if len(scores)>0 and np.max(scores)>self.threshold:
+	    detected_class = int(classes[np.argmax(scores)])
+	else:
+	    detected_class = 4
 
-        if scores[0] > self.threshold:
-            if classes[0] == 1:
-                print('Classes: {}, Green'.format(classes[0]))
-                return TrafficLight.GREEN
-            elif classes[0] == 2:
-                print('Classes: {}, Red'.format(classes[0]))
-                return TrafficLight.RED
-            elif classes[0] == 3:
-                print('Classes: {}, Yellow'.format(classes[0]))
-                return TrafficLight.YELLOW
+        if detected_class == 1:
+            print('Classes: {}, Green. Detection Duration {}'.format(TrafficLight.GREEN,dur.total_seconds()))
+            return TrafficLight.GREEN
+        elif detected_class == 3:
+            print('Classes: {}, Red Detection Duration {}'.format(TrafficLight.RED,dur.total_seconds()))
+            return TrafficLight.RED
+        elif detected_class == 2:
+            print('Classes: {}, Gelb. Detection Duration {}'.format(TrafficLight.YELLOW,dur.total_seconds()))
+            return TrafficLight.YELLOW
 
         return TrafficLight.UNKNOWN
